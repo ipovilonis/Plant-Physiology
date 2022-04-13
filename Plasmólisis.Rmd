@@ -1,0 +1,327 @@
+---
+title: "Plasmólisis en catáfilas de cebolla (*Alium cepa*)"
+output:
+ html_document:
+   toc: true
+   toc_depth: 5
+   toc_float:
+     collapsed: false
+     smooth_scroll: true
+---
+
+# Introducción
+
+En un ensayo de laboratorio (estudio experimental) se quiere conocer si la influencia de los factores fijos cuantitativos *tiempo* y *concentración* influyen en el *número de células plasmolizadas* en catáfilas de cebolla.
+
+# Objetivo
+
+Poder identificar, a partir de los datos obtenidos en el TP n°1,  el diseño experimental, las variables, su estadística descriptiva y los modelos posibles y su significancia.
+
+# Planteo del diseño experimental
+
+¿Cuál es el objetivo?
+
+¿Cuál es la unidad experimental?
+
+¿Manipulativo/experimental **o** Mensurativo/observacional?
+
+Hay aleatorización en la asignación de tratamientos -> **manipulativo**
+Hay aleatorización en la selección de las unidades experimentales -> **mensurativo**
+
+¿Cuáles son las variables explicativas?¿Fijas o aleatorias?¿Naturaleza de cada una?
+
+¿Cuál es la variable respuesta/dependiente?¿Cual es su naturaleza?¿Cuál es su distribución de probabilidades?
+
+Tipo de análisis estadístico:
+Cualitativa -> anova
+Cuantitativa -> regresión
+Cualitativa * Cuantitativa -> regresión categórica
+Cuantitativa * Cuantitativa -> regresión múltiple
+Cualitativa * Cualitativa -> factorial
+
+¿Hay alguna estrutura de agregación jerarquica de agrupación de datos, interacción, falta de independencia?
+
+# Revisión estadística del estudio
+
+Tipo de estudio: *experimental/manipulativo* 
+
+Variables explicativas o independientes: *tiempo* y *concentración NaCl*
+*tiempo*: cuantitativa continua. Fija.
+*concentración NaCl*: cuantitativa continua. Fija.
+
+Variable respuesta o dependiente: N° de célualas plasmolizadas.  (*La variable respuesta corresponde a una distribución Poisson, a efectos didácticos se acepta una distribución Normal*).
+
+Tipo de análisis: regresión lineal simple, regresión lineal múltiple, regresión categórica.
+
+# Análisis de regresión:
+
+* **Valor p**: el valor p del análisis de regresión explica si se rechaza o no la H0 de que no hay regresión. Si es < a 0,05 se rechaza y entonces concluimos que hay regresión.
+
+* **Coeficiente de determinación** (R²) es una medida descriptiva de la bondad de ajuste del modelo, es decir cuan bien se ajusta la recta a los valores observados. Es el porcentaje o fracción de variación total explicada por el modelo. Va de 0 a 1. Básicamente mide que tan bueno es el modelo. Es decir cuanto del error aleatorio es reducido por el modelo o de otra forma cuanta varianza es explicada por el modelo. Es la suma de cuadrados del error sobre la suma de cuadrados del total. Un valor alto de R² implica la existencia de una relación entre X e Y, pero no demuestra que haya relación causa-efecto. En resumen, indica la proporción de la variación total de Y que puede ser explicada por la dependencia lineal con X.
+
+Influye el tamaño muestral y el número de variables explicativas del modelo, por eso: 
+
+* **R² ajustado**  se utiliza para comparar modelos pero incluye penalización por la cantidad de datos observados y el número de variables independientes incluidas al modelo. A menos muestras y más X incluidas más penalización.
+
+Se puede realizar pruebas de significancia de los coeficientes o también llamados pruebas de hipótesis.
+
+* La raíz cuadrada del coeficiente de determinación (R²) se denomina **coeficiente de correlación de Pearson** (R). Va de -1 a 1. Este se usa para comparar dos variables (cuantitativas) midiendo el ajuste lineal. Es el grado de asociación lineal entre dos variables X e Y.
+
+
+
+```{r, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+
+# si los paquetes no estan, ir a packages y cargarlo donde dice install
+
+library(dplyr) # Para hacer tabla de promedios
+library(ggplot2) # Para hacer gráficos
+
+setwd("C:/Users/um/Desktop/Rwd")
+
+```
+
+# Tabla de datos
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+concentracionf<-c("0","0,8","0,8","0,8","5","5","10","10")
+concentracion<-c(0,0.8,0.8,0.8,5,5,10,10)
+tiempo<-c(25, 5, 18, 38, 8, 20, 10, 30)
+celulas<-c(1,0,2,5,12,17,18,28)
+data<-data.frame(concentracion,tiempo, celulas)
+data$concentracionf<-as.factor(data$concentracion)
+data
+# str(data)
+data$concentracionf<-factor(data$concentracion,levels=c("0","0.8", "5","10"))
+```
+
+## Gráfico de dispersión
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+
+p<-ggplot(data, aes(x =tiempo, y = celulas)) +
+  geom_point(aes(), size=5)+
+  xlab("Tiempo (mim)") +  ylab("N° de células plasmolizadas") +
+  ggtitle("Conteo de células plasmolizadas con NaCl a través del tiempo")+
+  theme(panel.grid.major.x = element_blank())+
+  theme(legend.position = "none")+
+  theme_classic()
+p
+```
+
+# Modelos
+
+¿Qué es un modelo?
+Es una representación de la variable respuesta como función de la/s variable/s explicativa/s.
+Permite contrastar las predicciones del investigador con las mediciones/observaciones del estudio.
+
+## Modelo nulo:
+
+Sin variables explicativas
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+#Modelo 0: nulo
+
+m0<-lm(celulas ~ 1, data)
+
+g0<-p + geom_hline(yintercept = mean(data$celulas), color="red3", size=1.5)
+g0
+```
+
+### Media:
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+mean(data$celulas)
+```
+
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+
+plot0<-ggplot(data = data, aes(m0$fitted.values, m0$residuals)) +
+  geom_point() +
+  geom_smooth(color = "firebrick", se = FALSE) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none")+
+  theme_classic()
+plot0
+```
+El modelo nulo implica a la variable respuesta y su explicativa es sólo una constante. En este caso la media. Este modelo nulo no nos sirve para explicar.
+
+### R²
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+summary(m0)$r.squared
+```
+
+## Modelo 1:
+
+Sólo con VE tiempo
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+#Modelo 1:
+m1<-lm(celulas ~ tiempo, data)
+
+g1 <- p + geom_smooth(method = "lm", se = FALSE, color="red3", size=1.5)
+g1
+```
+
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+
+plot1<-ggplot(data = data, aes(m1$fitted.values, m1$residuals)) +
+  geom_point() +
+  geom_smooth(color = "firebrick", se = FALSE) +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+plot1
+
+```
+
+### R²
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+summary(m1)$r.squared
+```
+
+## Modelo 2:
+
+Sólo con VE concentración
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+m2<-lm(celulas ~ concentracion, data)
+
+```
+
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE,global.device = TRUE)
+
+r<-ggplot(data, aes(x =concentracion, y = celulas)) +
+  geom_point(aes(), size=5)+
+  xlab("Concentración de NaCl (g/100ml)") +  ylab("N° de células plasmolizadas") +
+  ggtitle("Conteo de células plasmolizadas a distintas concentraciones de NaCl")+
+  theme(panel.grid.major.x = element_blank())+
+  theme_classic()
+
+g2 <- r + geom_smooth(method = "lm", se = FALSE, color="red3", size=1.5)
+g2
+
+```
+
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+plot2<-ggplot(data = data, aes(m2$fitted.values, m2$residuals)) +
+  geom_point() +
+  geom_smooth(color = "firebrick", se = FALSE) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none")+
+  theme_classic()
+plot2
+```
+
+### R²
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+summary(m2)$r.squared
+```
+
+## Modelo 3:
+
+Aditivo 
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+
+m3<-lm(celulas ~ concentracion + tiempo, data)
+
+plot3<-ggplot(data = data, aes(m3$fitted.values, m3$residuals)) +
+  geom_point() +
+  geom_smooth(color = "firebrick", se = FALSE) +
+  geom_hline(yintercept = 0) +
+  theme(legend.position = "none")+
+  theme_classic()
+plot3
+
+```
+
+### R²
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+summary(m3)$r.squared
+```
+
+## Modelo 4:
+
+Con interacción
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+#Modelo 4:
+m4<-lm(celulas ~ concentracion * tiempo, data)
+
+s<-ggplot(data, aes(x =concentracion, y = celulas, color=tiempo)) +
+  geom_point(aes(), size=5)+
+  xlab("Concentración de NaCl (g/100ml)") +  ylab("N° de células plasmolizadas") +
+  # ggtitle("Conteo de células plasmolizadas a distintas concentraciones de NaCl")+
+  theme(legend.position = "none")+
+  theme_classic()
+g4 <- s + geom_smooth(method = "lm", se = FALSE, color="red3", size=1.5)
+g4
+```
+
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+plot4<-ggplot(data = data, aes(m4$fitted.values, m4$residuals)) +
+  geom_point() +
+  geom_smooth(color = "firebrick", se = FALSE) +
+  geom_hline(yintercept = 0) +
+  theme_bw()
+plot4
+```
+
+### R²
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+summary(m4)$r.squared
+```
+
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+
+# library(gridExtra)
+# grid.arrange(g0 , plot0 , g1 , plot1, g2, plot2, g4, plot3 , g4 , plot4 , ncol = 2)
+
+```
+
+# Elección del modelo
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+AIC(m0,m1,m2,m3,m4)
+```
+
+Existen distintos métodos de comparación de modelos. Un ejemplo es el criterio de información de Akaike (AIC) el cuál tiene en cuenta la bondad de ajuste y la complejidad del modelo (cantidad de parámetros estimados).
+
+Para éste ejemplo es mejor modelo es el m4 (idem m5). Si bien es el más complejo, esa complejidad se justifica por un mejor ajuste.
+
+# Resultados
+
+
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+# anova(m4)
+```
+
+## Intérvalo de confianza
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+confint(m4)
+```
+
+## R²
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+summary(m4)$r.squared
+```
+
+## R² ajustado
+```{r, echo=FALSE, fig.align='center', fig.asp=0.4, fig.width=10, fig.height=8}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE)
+summary(m4)$adj.r.squared
+```
